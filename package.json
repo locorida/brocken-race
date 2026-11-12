@@ -1,0 +1,14 @@
+{
+  "name": "brocken-race",
+  "version": "1.0.0",
+  "description": "Small endless runner on canvas: mountain biking through the Harz up to the Brocken. Plain JavaScript, no dependencies.",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "test": "node sim/fairness.js && node sim/fairness.js narrow",
+    "bot": "node sim/bot.js 200 && node sim/bot.js 200 narrow"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

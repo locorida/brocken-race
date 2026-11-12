@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Brocken-Rennen</title>
+<meta name="description" content="Kleines Endlos-Spiel: mit dem Mountainbike durch den Harz bis auf den Brocken. Canvas, reines JavaScript, ohne Abhängigkeiten.">
+<style>
+  :root {
+    --bg: #eef3ef; --surface: #ffffff; --text-body: #1d2a22; --text-muted: #55625a;
+    --accent: #2f6b45; --accent-text: #ffffff; --border: #c9d6cd;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #101b17; --surface: #1a2722; --text-body: #e6eee9; --text-muted: #a9b8af; --accent: #6fbf8c; --accent-text: #0e1a14; --border: #2e3f37; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; background: var(--bg); color: var(--text-body);
+         font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.55; }
+  main { flex: 1; width: 100%; max-width: 680px; margin: 0 auto; padding: 48px 16px 32px; }
+  .lang { display: flex; justify-content: flex-end; gap: 4px; }
+  .lang a { color: var(--text-muted); text-decoration: none; padding: 2px 8px; border-radius: 6px; font-size: .9rem; }
+  .lang a[aria-current="true"] { color: var(--text-body); font-weight: 600; background: var(--surface); }
+  h1 { font-size: clamp(2rem, 6vw, 2.8rem); margin: 16px 0 4px; letter-spacing: -.01em; }
+  .tagline { margin: 0 0 28px; color: var(--text-muted); font-size: 1.1rem; }
+  .play { display: inline-flex; align-items: center; gap: 10px; font: inherit; font-size: 1.15rem; font-weight: 600;
+          padding: 14px 26px; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-text); cursor: pointer; }
+  .play:hover { filter: brightness(1.08); }
+  .play:focus-visible { outline: 3px solid var(--text-body); outline-offset: 3px; }
+  .play svg { width: 1.3em; height: 1.3em; }
+  section { margin-top: 36px; }
+  h2 { font-size: 1.05rem; margin: 0 0 6px; }
+  section p, section ul { margin: 0; color: var(--text-muted); }
+  ul { padding-left: 1.2em; }
+  footer { text-align: center; padding: 16px; font-size: .85rem; color: var(--text-muted); }
+  footer a { color: inherit; }
+
+  /* Spielfenster */
+  .bike-game { width: min(860px, calc(100vw - 24px)); max-width: none; margin: auto; padding: 0; border: 0; border-radius: 14px;
+               background: var(--surface); color: var(--text-body); box-shadow: 0 20px 50px rgba(0, 0, 0, .3); overflow: hidden; }
+  .bike-game::backdrop { background: rgba(16, 27, 23, .6); }
+  .bike-game-head { display: flex; align-items: center; justify-content: space-between; padding: .75rem 1rem; }
+  .bike-game-title { margin: 0; font-size: 1.15rem; }
+  .bike-game-close { border: 0; background: transparent; color: inherit; font-size: 1.6rem; line-height: 1; width: 2.75rem; height: 2.75rem;
+                     border-radius: 50%; cursor: pointer; } /* 44 px Zielgröße (WCAG 2.5.8) */
+  .bike-game-close:hover, .bike-game-close:focus-visible { background: rgba(127, 127, 127, .15); }
+  .bike-game canvas { display: block; width: 100%; height: auto; aspect-ratio: 800 / 220; touch-action: none; outline: none;
+                      user-select: none; -webkit-user-select: none; }
+  .bike-game-help { margin: 0; padding: .6rem 1rem .8rem; font-size: .85rem; color: var(--text-muted); text-align: center; }
+  .bike-game-help-touch { display: none; }
+  @media (hover: none) and (pointer: coarse) { .bike-game-help-keys { display: none; } .bike-game-help-touch { display: inline; } }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+</style>
+</head>
+<body>
+<main>
+  <nav class="lang" aria-label="Sprache / Language">
+    <a href="?lang=de" hreflang="de" lang="de" data-lang="de">Deutsch</a>
+    <a href="?lang=en" hreflang="en" lang="en" data-lang="en">English</a>
+  </nav>
+  <h1 data-i18n="title">Brocken-Rennen</h1>
+  <p class="tagline" data-i18n="tagline"></p>
+  <button type="button" class="play" id="play">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.5" cy="17" r="3.5"/><circle cx="18.5" cy="17" r="3.5"/><path d="M15 6h2l3 11M5.5 17 9 9h7l-4.5 8H5.5M9 9 8 6H6"/></svg>
+    <span data-i18n="play"></span>
+  </button>
+  <section>
+    <h2 data-i18n="howTitle"></h2>
+    <ul>
+      <li data-i18n="how1"></li>
+      <li data-i18n="how2"></li>
+      <li data-i18n="how3"></li>
+    </ul>
+  </section>
+  <section>
+    <h2 data-i18n="aboutTitle"></h2>
+    <p data-i18n="about"></p>
+  </section>
+</main>
+<footer><a href="https://github.com/locorida/brocken-race" data-i18n="source"></a> · MIT</footer>
+
+<dialog id="bike-game" class="bike-game" aria-labelledby="bike-game-title">
+  <div class="bike-game-head">
+    <h2 id="bike-game-title" class="bike-game-title" data-i18n="title"></h2>
+    <button type="button" class="bike-game-close"><span aria-hidden="true">×</span></button>
+  </div>
+  <canvas width="800" height="220" tabindex="0" role="img"></canvas>
+  <p class="bike-game-help">
+    <span class="bike-game-help-keys" data-i18n="helpKeys"></span>
+    <span class="bike-game-help-touch" data-i18n="helpTouch"></span>
+  </p>
+  <p class="visually-hidden bike-game-status" role="status" aria-live="polite"></p>
+</dialog>
+
+<script>
+(function () {
+  'use strict';
+  const TEXTS = {
+    de: {
+      title: 'Brocken-Rennen', tagline: 'Mit dem Mountainbike durch den Harz, bis hinauf auf den Brocken.', play: 'Spielen',
+      howTitle: 'So geht’s',
+      how1: 'Leertaste, Pfeil hoch oder Tippen: springen. Pfeil runter halten oder nach unten wischen: ducken.',
+      how2: 'Über Steine, Büsche, Jungtannen, Bänke, Wildschweine und Wölfe springen, unter Bussard und Eule wegducken.',
+      how3: 'Es wird immer schneller. Bei 2000 m wartet der verschneite Brocken-Gipfel, danach geht es weiter Richtung Schierke.',
+      aboutTitle: 'Technik',
+      about: 'Canvas und reines JavaScript, keine Bibliotheken. Die Spielbalance ist per Simulation geprüft: Jedes Hindernis lässt sich in einem Zeitfenster von mindestens 125 ms überspringen.',
+      source: 'Quellcode auf GitHub', close: 'Spiel schließen',
+      canvas: 'Spiel: Ein Mountainbiker fährt durch den Harz. Über Steine, Büsche, Jungtannen, Bänke, Wildschweine und Wölfe springen, unter Vögeln wegducken.',
+      helpKeys: 'Leertaste oder ↑ springen, ↓ ducken', helpTouch: 'Tippen springen, nach unten wischen ducken',
+      game: { title: 'Brocken-Rennen', start: 'Zum Starten Leertaste drücken oder tippen', crash: 'Gestürzt!', again: 'Nochmal: Leertaste oder tippen',
+        record: 'Rekord', newRecord: 'Neuer Rekord!', summit: 'Auf dem Brocken!', summitNext: 'Weiter geht’s: Abfahrt nach Schierke', summitDone: 'Brocken erreicht' }
+    },
+    en: {
+      title: 'Brocken Race', tagline: 'Mountain biking through the Harz mountains, all the way up the Brocken.', play: 'Play',
+      howTitle: 'How to play',
+      how1: 'Space, arrow up or tap: jump. Hold arrow down or swipe down: duck.',
+      how2: 'Jump over rocks, bushes, young firs, benches, wild boars and wolves, duck under buzzards and owls.',
+      how3: 'It keeps getting faster. At 2000 m the snowy summit of the Brocken awaits, then the ride goes on towards Schierke.',
+      aboutTitle: 'Under the hood',
+      about: 'Canvas and plain JavaScript, no libraries. The difficulty is checked by simulation: every obstacle can be cleared within a jump window of at least 125 ms.',
+      source: 'Source code on GitHub', close: 'Close game',
+      canvas: 'Game: a mountain biker rides through the Harz. Jump over rocks, bushes, young firs, benches, wild boars and wolves, duck under birds.',
+      helpKeys: 'Space or ↑ to jump, ↓ to duck', helpTouch: 'Tap to jump, swipe down to duck',
+      game: { title: 'Brocken Race', start: 'Press space or tap to start', crash: 'Crashed!', again: 'Again: press space or tap',
+        record: 'Best', newRecord: 'New record!', summit: 'On top of the Brocken!', summitNext: 'Keep going: downhill to Schierke', summitDone: 'Brocken reached' }
+    }
+  };
+  const param = new URLSearchParams(location.search).get('lang');
+  const lang = TEXTS[param] ? param : ((navigator.language || '').toLowerCase().startsWith('de') ? 'de' : 'en');
+  const t = TEXTS[lang];
+  document.documentElement.lang = lang;
+  document.title = t.title;
+  document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t[el.dataset.i18n]; });
+  document.querySelectorAll('[data-lang]').forEach((a) => a.setAttribute('aria-current', String(a.dataset.lang === lang)));
+  const dialog = document.getElementById('bike-game');
+  dialog.dataset.texts = JSON.stringify(t.game);
+  dialog.querySelector('.bike-game-close').setAttribute('aria-label', t.close);
+  dialog.querySelector('canvas').setAttribute('aria-label', t.canvas);
+  // Dunkles Farbschema: das Spiel beginnt dann nachts (wie auf der Website, für die es entstanden ist)
+  if (matchMedia('(prefers-color-scheme: dark)').matches) document.body.classList.add('theme-dark');
+})();
+</script>
+<script src="bike-game.js"></script>
+<script>
+  document.getElementById('play').addEventListener('click', () => window.BikeGame.open());
+  if (location.hash === '#play') window.BikeGame.open();
+</script>
+</body>
+</html>
